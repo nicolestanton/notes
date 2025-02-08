@@ -1,67 +1,35 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import styles from "./Note.module.scss";
-
-type Note = {
-  id: number | null;
-  value: string;
-};
-
-type NoteResponse = {
-  id: number | null;
-  body: string;
-};
 
 type User = {
   id: number;
   first_name: string;
 };
 
-export const Note = () => {
-  const [noteData, setNoteData] = useState<Note>({ id: null, value: "" });
-  const [latestNote, setLatestNote] = useState<NoteResponse | null>(null);
+type NoteProps = {
+  noteId: number;
+  initialContent: string;
+  lastUpdated?: string;
+  onUpdate: (noteId: number, content: string) => Promise<void>;
+};
+
+export const Note = ({
+  noteId,
+  initialContent,
+  lastUpdated,
+  onUpdate,
+}: NoteProps) => {
+  const [value, setValue] = useState(initialContent);
+
+  // Update local state when initialContent changes (e.g., after fetch)
+  useEffect(() => {
+    setValue(initialContent);
+  }, [initialContent]);
   const [showMentions, setShowMentions] = useState(false);
   const [mentionUsers, setMentionUsers] = useState<User[]>([]);
   const [cursorPosition, setCursorPosition] = useState(0);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const SESSION_NAME = "session4";
-
-  useEffect(() => {
-    const fetchNotes = async () => {
-      const response = await fetch(
-        `https://challenge.surfe.com/${SESSION_NAME}/notes`
-      );
-      const data = await response.json();
-      setLatestNote(data[0]);
-      // Set initial note value when fetched
-      if (data[0]) {
-        setNoteData({ id: data[0].id, value: data[0].body });
-      }
-    };
-    fetchNotes();
-  }, []);
-
-  const saveNote = async (content: string) => {
-    try {
-      let url = `https://challenge.surfe.com/${SESSION_NAME}/notes`;
-      const method = latestNote ? "PUT" : "POST";
-
-      if (latestNote) {
-        url = `${url}/${latestNote.id}`;
-      }
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: latestNote?.id, body: content }),
-      });
-
-      if (!response.ok)
-        throw new Error(`Failed to ${noteData.id ? "update" : "save"} note`);
-    } catch (error) {
-      console.error("Error saving note:", error);
-    }
-  };
 
   const searchUsers = async (query: string) => {
     try {
@@ -97,13 +65,13 @@ export const Note = () => {
       clearTimeout(saveTimeoutRef.current);
     }
     saveTimeoutRef.current = setTimeout(() => {
-      saveNote(content);
+      onUpdate(noteId, content);
     }, 1000);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const noteText = e.target.value;
-    setNoteData({ id: noteData.id, value: noteText });
+    setValue(noteText);
     saveContentAfterDelay(noteText);
 
     const position = e.target.selectionStart;
@@ -125,30 +93,40 @@ export const Note = () => {
   };
 
   const insertMention = (username: string) => {
-    const beforeMention = noteData.value.slice(
+    const beforeMention = value.slice(
       0,
-      noteData.value.lastIndexOf("@", cursorPosition)
+      value.lastIndexOf("@", cursorPosition)
     );
-    const afterMention = noteData.value.slice(cursorPosition);
+    const afterMention = value.slice(cursorPosition);
     const newNote = `${beforeMention}@${username} ${afterMention}`;
-    setNoteData({ id: noteData.id, value: newNote });
+    setValue(newNote);
     setShowMentions(false);
     saveContentAfterDelay(newNote);
   };
 
   return (
-    <div className={styles.note}>
-      <span>Note</span>
+    <div className={styles.note} id={`note-${noteId}`}>
+      <div className={styles.noteHeader}>
+        <span className={styles.lastUpdated}>
+          Last updated:{" "}
+          {lastUpdated ? new Date(lastUpdated).toLocaleString() : "Never"}
+        </span>
+      </div>
       <textarea
-        value={noteData.value}
+        value={value}
         placeholder="add a note"
         onChange={handleChange}
+        className={styles.textarea}
       />
 
       {showMentions && mentionUsers.length > 0 && (
-        <div>
+        <div className={styles.mentionsDropdown}>
           {mentionUsers.map((user, index) => (
-            <div key={index} onClick={() => insertMention(user.first_name)}>
+            <div
+              key={index}
+              className={styles.mentionItem}
+              onClick={() => insertMention(user.first_name)}
+            >
               {user.first_name}
             </div>
           ))}
