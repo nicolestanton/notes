@@ -107,6 +107,7 @@ export const Note = ({
   return (
     <div className={styles.note} id={`note-${noteId}`}>
       <div className={styles.noteHeader}>
+        <span className={styles.noteTitle}>Note Title</span>
         <span className={styles.lastUpdated}>
           Last updated:{" "}
           {lastUpdated ? new Date(lastUpdated).toLocaleString() : "Never"}
