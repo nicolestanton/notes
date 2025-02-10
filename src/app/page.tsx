@@ -8,7 +8,7 @@ import { Note as NoteType } from "@/types";
 
 export default function Home() {
   const [notes, setNotes] = useState<NoteType[]>([]);
-  const SESSION_NAME = "session13";
+  const SESSION_NAME = "session14";
 
   useEffect(() => {
     const fetchNotes = async () => {

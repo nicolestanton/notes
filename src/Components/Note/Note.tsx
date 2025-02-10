@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import { useEffect, useRef, useState } from "react";
 import styles from "./Note.module.scss";
@@ -12,8 +11,10 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
   const [showMentions, setShowMentions] = useState(false);
   const [mentionUsers, setMentionUsers] = useState<User[]>([]);
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const mentionsRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
       const users = await getUsers();
       const filtered = filterAndSortUsers(users, query, 5);
       setMentionUsers(filtered);
+      setSelectedIndex(0); // Reset selection when search results change
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -91,6 +93,44 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
     setValue(newNote);
     setShowMentions(false);
     saveContentAfterDelay(newNote);
+    textareaRef.current?.focus();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!showMentions || mentionUsers.length === 0) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev < mentionUsers.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        break;
+      case "Enter":
+        e.preventDefault();
+        const selectedUser = mentionUsers[selectedIndex];
+        if (selectedUser) {
+          insertMention(selectedUser.first_name, selectedUser.last_name);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        setShowMentions(false);
+        break;
+      case "Tab":
+        if (showMentions) {
+          e.preventDefault();
+          const selectedUser = mentionUsers[selectedIndex];
+          if (selectedUser) {
+            insertMention(selectedUser.first_name, selectedUser.last_name);
+          }
+        }
+        break;
+    }
   };
 
   const renderFormattedContent = () => {
@@ -127,29 +167,55 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
           ref={textareaRef}
           value={value}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           className={styles.textarea}
+          aria-label="Note content"
+          aria-describedby={showMentions ? "mentions-instructions" : undefined}
+          aria-expanded={showMentions}
+          aria-controls={showMentions ? "mentions-list" : undefined}
+          aria-activedescendant={
+            showMentions ? `mention-item-${selectedIndex}` : undefined
+          }
+          role="combobox"
         />
-
         <div
           ref={overlayRef}
           className={styles.overlay}
           data-placeholder="add a note"
+          aria-hidden="true"
         >
           {renderFormattedContent()}
         </div>
 
         {showMentions && mentionUsers.length > 0 && (
-          <div className={styles.mentionsDropdown}>
-            {mentionUsers.map((user, index) => (
-              <div
-                key={index}
-                className={styles.mentionItem}
-                onClick={() => insertMention(user.first_name, user.last_name)}
-              >
-                {user.first_name}-{user.last_name}
-              </div>
-            ))}
-          </div>
+          <>
+            <div id="mentions-instructions" className={styles.srOnly}>
+              Use up and down arrow keys to navigate suggestions. Press Enter to
+              select.
+            </div>
+            <div
+              ref={mentionsRef}
+              className={styles.mentionsDropdown}
+              id="mentions-list"
+              role="listbox"
+              aria-label="User suggestions"
+            >
+              {mentionUsers.map((user, index) => (
+                <div
+                  key={index}
+                  id={`mention-item-${index}`}
+                  className={`${styles.mentionItem} ${
+                    index === selectedIndex ? styles.selected : ""
+                  }`}
+                  onClick={() => insertMention(user.first_name, user.last_name)}
+                  role="option"
+                  aria-selected={index === selectedIndex}
+                >
+                  {user.first_name}-{user.last_name}
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

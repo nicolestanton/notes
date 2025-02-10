@@ -54,7 +54,7 @@ describe('Note Component', () => {
       />
     );
 
-    expect(screen.getByRole('textbox')).toHaveValue('Initial note content');
+    expect(screen.getByRole('combobox')).toHaveValue('Initial note content');
   });
 
   it('updates content when typing', async () => {
@@ -66,7 +66,7 @@ describe('Note Component', () => {
       />
     );
 
-    const textarea = screen.getByRole('textbox');
+    const textarea = screen.getByRole('combobox');
     fireEvent.change(textarea, { target: { value: 'New content' } });
 
     expect(textarea).toHaveValue('New content');
@@ -86,7 +86,7 @@ describe('Note Component', () => {
       />
     );
 
-    const textarea = screen.getByRole('textbox');
+    const textarea = screen.getByRole('combobox');
     fireEvent.change(textarea, { target: { value: '@', selectionStart: 1 } });
 
     await waitFor(() => {
@@ -105,7 +105,7 @@ describe('Note Component', () => {
       />
     );
 
-    const textarea = screen.getByRole('textbox');
+    const textarea = screen.getByRole('combobox');
     fireEvent.change(textarea, { target: { value: '@', selectionStart: 1 } });
 
     await waitFor(() => {
