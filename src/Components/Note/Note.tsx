@@ -6,7 +6,12 @@ import { User } from "@/types";
 import { getUsers } from "@/endpoints";
 import { Note as NoteProps } from "@/types";
 
-export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
+export const Note = ({
+  id,
+  body,
+  lastUpdated,
+  onUpdate
+}: NoteProps) => {
   const [value, setValue] = useState(body);
   const [showMentions, setShowMentions] = useState(false);
   const [mentionUsers, setMentionUsers] = useState<User[]>([]);
@@ -35,7 +40,14 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
     };
 
     textarea.addEventListener("scroll", handleScroll);
-    return () => textarea.removeEventListener("scroll", handleScroll);
+
+    // Proper cleanup function
+    return () => {
+      textarea.removeEventListener("scroll", handleScroll);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, []);
 
   const searchUsers = async (query: string) => {

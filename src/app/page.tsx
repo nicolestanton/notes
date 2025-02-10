@@ -1,18 +1,24 @@
 "use client";
 import React from "react";
 import { useEffect, useState } from "react";
-import styles from "./page.module.css";
+import styles from "./page.module.scss";
 import { Note } from "@/Components/Note/Note";
 import { createNote, getNotes, updateNote } from "@/endpoints";
 import { Note as NoteType } from "@/types";
+import { Loading } from "@/Components/Loading/Loading";
+import { Error } from "@/Components/Error/Error";
 
 export default function Home() {
   const [notes, setNotes] = useState<NoteType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const SESSION_NAME = "session14";
 
   useEffect(() => {
     const fetchNotes = async () => {
       try {
+        setIsLoading(true);
+        setErrorMessage(null);
         const data = await getNotes(SESSION_NAME);
 
         // Get stored timestamps from localStorage
@@ -28,7 +34,10 @@ export default function Home() {
 
         setNotes(notesWithTimestamps);
       } catch (error) {
+        setErrorMessage("Failed to fetch notes");
         console.error("Error fetching notes:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchNotes();
@@ -63,10 +72,18 @@ export default function Home() {
 
       setNotes(updatedNotes);
     } catch (error) {
-      console.error(`Error saving note ${noteId}:`, error);
+      setErrorMessage("Failed to save note");
       throw error;
     }
   };
+
+  if (errorMessage) {
+    return <Error message={errorMessage} />;
+  }
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <div className={styles.page}>

@@ -11,3 +11,7 @@ export type Note = {
   lastUpdated?: string;
   onUpdate?: (id: number, body: string) => Promise<void>;
 };
+
+export type Error = {
+  message: string;
+};
