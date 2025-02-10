@@ -12,14 +12,14 @@ export default function Home() {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const SESSION_NAME = "session14";
+  const SESSION = "finalSolution12";
 
   useEffect(() => {
     const fetchNotes = async () => {
       try {
         setIsLoading(true);
         setErrorMessage(null);
-        const data = await getNotes(SESSION_NAME);
+        const data = await getNotes(SESSION);
 
         // Get stored timestamps from localStorage
         const storedTimestamps = JSON.parse(
@@ -49,9 +49,9 @@ export default function Home() {
       const timestamp = new Date().toISOString();
 
       if (existingNote) {
-        await updateNote(SESSION_NAME, noteId, { id: noteId, body: content });
+        await updateNote(SESSION, noteId, { id: noteId, body: content });
       } else {
-        await createNote(SESSION_NAME, { id: noteId, body: content });
+        await createNote(SESSION, { id: noteId, body: content });
       }
 
       // Update timestamps in localStorage
@@ -89,15 +89,10 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <Note
+          disabled={isLoading}
           id={0}
           body={notes.find((n) => n.id === 0)?.body || ""}
           lastUpdated={notes.find((n) => n.id === 0)?.lastUpdated}
-          onUpdate={updateNoteContent}
-        />
-        <Note
-          id={1}
-          body={notes.find((n) => n.id === 1)?.body || ""}
-          lastUpdated={notes.find((n) => n.id === 1)?.lastUpdated}
           onUpdate={updateNoteContent}
         />
       </main>

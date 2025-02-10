@@ -10,7 +10,8 @@ export const Note = ({
   id,
   body,
   lastUpdated,
-  onUpdate
+  onUpdate,
+  disabled
 }: NoteProps) => {
   const [value, setValue] = useState(body);
   const [showMentions, setShowMentions] = useState(false);
@@ -63,37 +64,53 @@ export const Note = ({
 
   const saveContentAfterDelay = (content: string) => {
     if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = setTimeout(() => {
-      if (onUpdate) {
-        onUpdate(id, content);
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
       }
-    }, 1000);
-  };
+      
+      saveTimeoutRef.current = setTimeout(() => {
+        if (onUpdate) {
+          onUpdate(id, content);
+        }
+        // Clear the ref after update
+        saveTimeoutRef.current = null;
+      }, 1000);
+    };
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const noteText = e.target.value;
-    setValue(noteText);
-    saveContentAfterDelay(noteText);
+const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const noteText = e.target.value;
+  setValue(noteText);
+  saveContentAfterDelay(noteText);
 
-    const position = e.target.selectionStart;
-    setCursorPosition(position);
+  const position = e.target.selectionStart;
+  setCursorPosition(position);
 
-    const lastChar = noteText.charAt(position - 1);
-    if (lastChar === "@") {
+  // Get the text from the last @ symbol to the cursor position
+  const textBeforeCursor = noteText.slice(0, position);
+  const lastAtPos = textBeforeCursor.lastIndexOf("@");
+  
+  // Only show mentions if:
+  // 1. We just typed @ (lastChar is @)
+  // 2. OR we're in the middle of a mention (there's an @ before cursor with no space after it)
+  if (lastAtPos !== -1) {
+    const textAfterAt = textBeforeCursor.slice(lastAtPos + 1);
+    const hasSpaceAfterAt = /\s/.test(textAfterAt);
+    
+    if (position - lastAtPos === 1) {
+      // Just typed @
       setShowMentions(true);
       searchUsers("");
-    } else if (showMentions) {
-      const lastAtPos = noteText.lastIndexOf("@", position);
-      if (lastAtPos === -1 || position <= lastAtPos) {
-        setShowMentions(false);
-      } else {
-        const mentionText = noteText.slice(lastAtPos + 1, position);
-        searchUsers(mentionText);
-      }
+    } else if (!hasSpaceAfterAt && position > lastAtPos) {
+      // In the middle of typing a mention
+      setShowMentions(true);
+      searchUsers(textAfterAt);
+    } else {
+      setShowMentions(false);
     }
-  };
+  } else {
+    setShowMentions(false);
+  }
+};
 
   const insertMention = (username: string, lastname: string) => {
     const beforeMention = value.slice(
@@ -169,13 +186,14 @@ export const Note = ({
         <span className={styles.lastUpdated}>
           Last updated:{" "}
           <span data-testid="last-updated-date">
-            {lastUpdated ? new Date(lastUpdated).toLocaleString() : "Never"}
+            {lastUpdated ? new Date(lastUpdated).toLocaleString() : "-"}
           </span>
         </span>
       </div>
 
       <div className={styles.editorContainer}>
         <textarea
+          disabled={disabled}
           ref={textareaRef}
           value={value}
           onChange={handleChange}

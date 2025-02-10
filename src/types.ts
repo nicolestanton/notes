@@ -10,6 +10,7 @@ export type Note = {
   body: string;
   lastUpdated?: string;
   onUpdate?: (id: number, body: string) => Promise<void>;
+  disabled?: boolean;
 };
 
 export type Error = {
