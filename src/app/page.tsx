@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { useEffect, useState } from "react";
-import styles from "./page.module.scss";
 import { Note } from "@/Components/Note/Note";
 import { createNote, getNotes, updateNote } from "@/endpoints";
 import { Note as NoteType } from "@/types";
@@ -12,7 +11,7 @@ export default function Home() {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const SESSION = "finalSolution12";
+  const SESSION = "finalSolution1";
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -86,8 +85,8 @@ export default function Home() {
   }
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
+    <div>
+      <main>
         <Note
           disabled={isLoading}
           id={0}
