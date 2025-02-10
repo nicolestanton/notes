@@ -7,7 +7,7 @@ import { Note as NoteType } from "@/types";
 
 export default function Home() {
   const [notes, setNotes] = useState<NoteType[]>([]);
-  const SESSION_NAME = "session12";
+  const SESSION_NAME = "session13";
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -36,38 +36,20 @@ export default function Home() {
   const updateNoteContent = async (noteId: number, content: string) => {
     try {
       const existingNote = notes.find((note) => note.id === noteId);
+      const timestamp = new Date().toISOString();
 
-      const response = existingNote
-        ? await updateNote(SESSION_NAME, Number(noteId), {
-            body: content,
-          })
-        : await createNote(SESSION_NAME, {
-            id: Number(noteId),
-            body: content,
-          });
-
-      // Only update timestamp if content changed or it's a new note
-      const contentChanged = existingNote?.body !== content;
-      let timestamp = existingNote?.lastUpdated || new Date().toISOString();
-
-      if (contentChanged) {
-        timestamp = new Date().toISOString();
-        // Update timestamps in localStorage
-        const storedTimestamps = JSON.parse(
-          localStorage.getItem("noteTimestamps") || "{}"
-        );
-        storedTimestamps[noteId] = timestamp;
-        localStorage.setItem(
-          "noteTimestamps",
-          JSON.stringify(storedTimestamps)
-        );
+      if (existingNote) {
+        await updateNote(SESSION_NAME, noteId, { id: noteId, body: content });
+      } else {
+        await createNote(SESSION_NAME, { id: noteId, body: content });
       }
 
-      if (response.status !== 200) {
-        throw new Error(
-          `Failed to ${existingNote ? "update" : "create"} note ${noteId}`
-        );
-      }
+      // Update timestamps in localStorage
+      const storedTimestamps = JSON.parse(
+        localStorage.getItem("noteTimestamps") || "{}"
+      );
+      storedTimestamps[noteId] = timestamp;
+      localStorage.setItem("noteTimestamps", JSON.stringify(storedTimestamps));
 
       // Update local state
       const updatedNotes = existingNote
@@ -81,6 +63,7 @@ export default function Home() {
       setNotes(updatedNotes);
     } catch (error) {
       console.error(`Error saving note ${noteId}:`, error);
+      throw error;
     }
   };
 

@@ -15,13 +15,22 @@ export const getNotes = async (session: string) => {
 export const createNote = async (session: string, note: Note) => {
   const response = await fetch(`https://challenge.surfe.com/${session}/notes`, {
     method: "POST",
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(note),
   });
-  if (!response.ok) throw new Error("Failed to create note");
-  return response.json();
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to create note");
+  }
+
+  return data;
 };
 
-export const updateNote = async (session: string, noteId: number, note: { body: string }) => {
+export const updateNote = async (session: string, noteId: number, note: Note) => {
   const response = await fetch(`https://challenge.surfe.com/${session}/notes/${noteId}`, {
     method: "PUT",
     headers: {
@@ -32,6 +41,12 @@ export const updateNote = async (session: string, noteId: number, note: { body: 
       body: note.body
     }),
   });
-  if (!response.ok) throw new Error("Failed to update note");
-  return response.json();
+
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to update note");
+  }
+
+  return data;
 };

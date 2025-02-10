@@ -8,24 +8,38 @@ import { Note as NoteProps } from "@/types";
 
 export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
   const [value, setValue] = useState(body);
-
-  // Sync value with body when it changes
-  useEffect(() => {
-    setValue(body);
-  }, [body]);
-
   const [showMentions, setShowMentions] = useState(false);
   const [mentionUsers, setMentionUsers] = useState<User[]>([]);
   const [cursorPosition, setCursorPosition] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setValue(body);
+  }, [body]);
+
+  // Sync scroll positions between textarea and overlay
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    const overlay = overlayRef.current;
+
+    if (!textarea || !overlay) return;
+
+    const handleScroll = () => {
+      if (overlay && textarea) {
+        overlay.scrollTop = textarea.scrollTop;
+      }
+    };
+
+    textarea.addEventListener("scroll", handleScroll);
+    return () => textarea.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const searchUsers = async (query: string) => {
     try {
       const users = await getUsers();
-
       const filtered = filterAndSortUsers(users, query, 5);
-
       setMentionUsers(filtered);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -42,6 +56,7 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
       }
     }, 1000);
   };
+
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const noteText = e.target.value;
     setValue(noteText);
@@ -65,13 +80,13 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
     }
   };
 
-  const insertMention = (username: string) => {
+  const insertMention = (username: string, lastname: string) => {
     const beforeMention = value.slice(
       0,
       value.lastIndexOf("@", cursorPosition)
     );
     const afterMention = value.slice(cursorPosition);
-    const newNote = `${beforeMention}@${username} ${afterMention}`;
+    const newNote = `${beforeMention}@${username}_${lastname} ${afterMention}`;
     setValue(newNote);
     setShowMentions(false);
     saveContentAfterDelay(newNote);
@@ -85,8 +100,8 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
       if (!part) return null;
       if (part.startsWith("@")) {
         return (
-          <span key={index} className={styles.mention}>
-            {part}
+          <span key={index} className={styles.mentionWrapper}>
+            <span className={styles.mentionText}>{part}</span>
           </span>
         );
       }
@@ -107,7 +122,6 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
       </div>
 
       <div className={styles.editorContainer}>
-        {/* Base textarea for editing */}
         <textarea
           ref={textareaRef}
           value={value}
@@ -115,8 +129,11 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
           className={styles.textarea}
         />
 
-        {/* Styled overlay */}
-        <div className={styles.overlay} data-placeholder="add a note">
+        <div
+          ref={overlayRef}
+          className={styles.overlay}
+          data-placeholder="add a note"
+        >
           {renderFormattedContent()}
         </div>
 
@@ -126,9 +143,9 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
               <div
                 key={index}
                 className={styles.mentionItem}
-                onClick={() => insertMention(user.first_name)}
+                onClick={() => insertMention(user.first_name, user.last_name)}
               >
-                {user.first_name}
+                {user.first_name}-{user.last_name}
               </div>
             ))}
           </div>
