@@ -18,8 +18,8 @@ const mockUsers = [
 describe('Note Component', () => {
   const mockOnUpdate = jest.fn();
   const defaultProps = {
-    noteId: 1,
-    initialContent: '',
+    id: 1,
+    body: '',
     lastUpdated: '2024-01-01T00:00:00.000Z',
     onUpdate: mockOnUpdate,
   };
@@ -33,8 +33,8 @@ describe('Note Component', () => {
   it('renders with initial content', () => {
     render(
       <Note
-        noteId={1}
-        initialContent="Initial note content"
+        id={1}
+        body="Initial note content"
         onUpdate={mockOnUpdate}
       />
     );
@@ -45,8 +45,8 @@ describe('Note Component', () => {
   it('updates content when typing', async () => {
     render(
       <Note
-        noteId={1}
-        initialContent=""
+        id={1}
+        body=""
         onUpdate={mockOnUpdate}
       />
     );
@@ -65,8 +65,8 @@ describe('Note Component', () => {
   it('displays mentions dropdown when typing @', async () => {
     render(
       <Note
-        noteId={1}
-        initialContent=""
+        id={1}
+        body=""
         onUpdate={mockOnUpdate}
       />
     );
@@ -84,8 +84,8 @@ describe('Note Component', () => {
   it('inserts mention when clicking on suggestion', async () => {
     render(
       <Note
-        noteId={1}
-        initialContent=""
+        id={1}
+        body=""
         onUpdate={mockOnUpdate}
       />
     );
