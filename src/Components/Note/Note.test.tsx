@@ -1,18 +1,33 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { Note } from './Note';
-import { getUsers } from '@/endpoints';
+import React from 'react';
 import '@testing-library/jest-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { getUsers } from '../../endpoints';
+import { Note } from './Note';
 
 // Mock the getUsers endpoint
 jest.mock('@/endpoints', () => ({
   getUsers: jest.fn()
 }));
 
+jest.mock('./Note.module.scss', () => ({
+    note: 'note',
+    noteHeader: 'noteHeader',
+    noteTitle: 'noteTitle',
+    lastUpdated: 'lastUpdated',
+    editorContainer: 'editorContainer',
+    textarea: 'textarea',
+    overlay: 'overlay',
+    mentionsDropdown: 'mentionsDropdown',
+    mentionItem: 'mentionItem',
+    mentionWrapper: 'mentionWrapper',
+    mentionText: 'mentionText'
+  }));
+
 // Mock data
 const mockUsers = [
-  { id: 1, first_name: 'John' },
-  { id: 2, first_name: 'Jane' },
-  { id: 3, first_name: 'Bob' }
+  { id: 1, first_name: 'John', last_name: 'Doe' },
+  { id: 2, first_name: 'Jane', last_name: 'Smith' },
+  { id: 3, first_name: 'Bob', last_name: 'Jones' }
 ];
 
 describe('Note Component', () => {
@@ -75,9 +90,9 @@ describe('Note Component', () => {
     fireEvent.change(textarea, { target: { value: '@', selectionStart: 1 } });
 
     await waitFor(() => {
-      expect(screen.getByText('John')).toBeInTheDocument();
-      expect(screen.getByText('Jane')).toBeInTheDocument();
-      expect(screen.getByText('Bob')).toBeInTheDocument();
+      expect(screen.getByText('John-Doe')).toBeInTheDocument();
+      expect(screen.getByText('Jane-Smith')).toBeInTheDocument();
+      expect(screen.getByText('Bob-Jones')).toBeInTheDocument();
     });
   });
 
@@ -94,16 +109,16 @@ describe('Note Component', () => {
     fireEvent.change(textarea, { target: { value: '@', selectionStart: 1 } });
 
     await waitFor(() => {
-      expect(screen.getByText('John')).toBeInTheDocument();
+      expect(screen.getByText('John-Doe')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('John'));
+    fireEvent.click(screen.getByText('John-Doe'));
 
-    expect(textarea).toHaveValue('@John ');
+    expect(textarea).toHaveValue('@John-Doe ');
     
     // Wait for the debounced save
     await waitFor(() => {
-      expect(mockOnUpdate).toHaveBeenCalledWith(1, '@John ');
+      expect(mockOnUpdate).toHaveBeenCalledWith(1, '@John-Doe ');
     }, { timeout: 1100 });
   });
 

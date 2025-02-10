@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { useEffect, useRef, useState } from "react";
 import styles from "./Note.module.scss";
 import { filterAndSortUsers } from "@/utils/users/users";
@@ -86,7 +87,7 @@ export const Note = ({ id, body, lastUpdated, onUpdate }: NoteProps) => {
       value.lastIndexOf("@", cursorPosition)
     );
     const afterMention = value.slice(cursorPosition);
-    const newNote = `${beforeMention}@${username}_${lastname} ${afterMention}`;
+    const newNote = `${beforeMention}@${username}-${lastname} ${afterMention}`;
     setValue(newNote);
     setShowMentions(false);
     saveContentAfterDelay(newNote);

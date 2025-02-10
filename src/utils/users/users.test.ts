@@ -4,11 +4,11 @@ import { User } from '@/types';
 describe('filterAndSortUsers', () => {
   // Test data
   const mockUsers: User[] = [
-    { id: 1, first_name: 'John' },
-    { id: 2, first_name: 'Jane' },
-    { id: 3, first_name: 'Jack' },
-    { id: 4, first_name: 'Abbie' },
-    { id: 5, first_name: 'Bob' }
+    { id: 1, first_name: 'John', last_name: 'Doe' },
+    { id: 2, first_name: 'Jane', last_name: 'Smith' },
+    { id: 3, first_name: 'Jack', last_name: 'Johnson' },
+    { id: 4, first_name: 'Abbie', last_name: 'Brown' },
+    { id: 5, first_name: 'Bob', last_name: 'Jones' }
   ];
 
   it('filters users based on query', () => {
