@@ -2,28 +2,17 @@
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import { Note } from "@/Components/Note/Note";
-
-type NoteType = {
-  id: number;
-  body: string;
-  lastUpdated: string;
-  updated_at?: string;
-};
+import { createNote, getNotes, updateNote } from "@/endpoints";
+import { Note as NoteType } from "@/types";
 
 export default function Home() {
   const [notes, setNotes] = useState<NoteType[]>([]);
-  const SESSION_NAME = "session7";
+  const SESSION_NAME = "session12";
 
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const response = await fetch(
-          `https://challenge.surfe.com/${SESSION_NAME}/notes`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch notes");
-        }
-        const data = await response.json();
+        const data = await getNotes(SESSION_NAME);
 
         // Get stored timestamps from localStorage
         const storedTimestamps = JSON.parse(
@@ -44,16 +33,18 @@ export default function Home() {
     fetchNotes();
   }, []);
 
-  const updateNote = async (noteId: number, content: string) => {
+  const updateNoteContent = async (noteId: number, content: string) => {
     try {
-      let url = `https://challenge.surfe.com/${SESSION_NAME}/notes`;
-      let method = "POST";
-
       const existingNote = notes.find((note) => note.id === noteId);
-      if (existingNote) {
-        url = `${url}/${noteId}`;
-        method = "PUT";
-      }
+
+      const response = existingNote
+        ? await updateNote(SESSION_NAME, Number(noteId), {
+            body: content,
+          })
+        : await createNote(SESSION_NAME, {
+            id: Number(noteId),
+            body: content,
+          });
 
       // Only update timestamp if content changed or it's a new note
       const contentChanged = existingNote?.body !== content;
@@ -72,30 +63,20 @@ export default function Home() {
         );
       }
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: noteId,
-          body: content,
-        }),
-      });
-
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error(
-          `Failed to ${method === "PUT" ? "update" : "create"} note ${noteId}`
+          `Failed to ${existingNote ? "update" : "create"} note ${noteId}`
         );
       }
 
       // Update local state
-      const updatedNotes =
-        method === "PUT"
-          ? notes.map((note) =>
-              note.id === noteId
-                ? { ...note, body: content, lastUpdated: timestamp }
-                : note
-            )
-          : [...notes, { id: noteId, body: content, lastUpdated: timestamp }];
+      const updatedNotes = existingNote
+        ? notes.map((note) =>
+            note.id === noteId
+              ? { ...note, body: content, lastUpdated: timestamp }
+              : note
+          )
+        : [...notes, { id: noteId, body: content, lastUpdated: timestamp }];
 
       setNotes(updatedNotes);
     } catch (error) {
@@ -107,10 +88,16 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <Note
-          noteId={0}
-          initialContent={notes.find((n) => n.id === 0)?.body || ""}
+          id={0}
+          body={notes.find((n) => n.id === 0)?.body || ""}
           lastUpdated={notes.find((n) => n.id === 0)?.lastUpdated}
-          onUpdate={updateNote}
+          onUpdate={updateNoteContent}
+        />
+        <Note
+          id={1}
+          body={notes.find((n) => n.id === 1)?.body || ""}
+          lastUpdated={notes.find((n) => n.id === 1)?.lastUpdated}
+          onUpdate={updateNoteContent}
         />
       </main>
     </div>
