@@ -1,9 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "jsx": "react",
+    "jsx": "preserve",
     "esModuleInterop": true,
-    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "types": [
+      "jest",
+      "node",
+      "@testing-library/jest-dom"
+    ],
     "lib": [
       "dom",
       "dom.iterable",
@@ -34,8 +38,9 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
-, "jest.config.js"  ],
+    ".next/types/**/*.ts",
+    "jest.config.js"
+  ],
   "exclude": [
     "node_modules"
   ]
